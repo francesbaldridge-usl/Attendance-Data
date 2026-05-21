@@ -1,0 +1,41 @@
+name: USL Attendance Scraper
+
+on:
+  schedule:
+    - cron: '0 10 * * 1'  # Every Monday 8am EST (13:00 UTC)
+  workflow_dispatch:        # Lets you trigger manually from GitHub
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install selenium webdriver-manager beautifulsoup4 pandas openpyxl
+
+      - name: Install Chrome
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
+      - name: Run scraper
+        env:
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+        run: python scraper.py
+
+      - name: Commit updated Excel to repo
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git add attendance.xlsx
+          git commit -m "Weekly attendance update $(date '+%Y-%m-%d')" || echo "No changes to commit"
+          git push
