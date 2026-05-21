@@ -2,7 +2,7 @@ name: USL Attendance Scraper
 
 on:
   schedule:
-    - cron: '0 10 * * 1'  # Every Monday 8am EST (13:00 UTC)
+    - cron: '0 13 * * 1'  # Every Monday 8am EST (13:00 UTC)
   workflow_dispatch:        # Lets you trigger manually from GitHub
 
 jobs:
