@@ -77,18 +77,23 @@ def scrape_schedule(url: str) -> pd.DataFrame:
                 expansion_id = button.get_attribute("data-expansion_id")
 
                 driver.execute_script("arguments[0].click();", button)
-                time.sleep(2)
 
                 try:
                     panel = driver.find_element(By.ID, expansion_id)
-                    try:
-                        att_el = panel.find_element(
-                            By.XPATH, ".//div[@class='Opta-Matchdata']//dt[text()='Attendance']/following-sibling::dd[1]"
-                        )
-                        record["attendance"] = att_el.get_attribute('innerHTML').strip() or None
-                    except NoSuchElementException:
-                        record["attendance"] = None
-                except NoSuchElementException:
+                    
+                    # Wait until the attendance dt is actually present inside this panel
+                    wait.until(
+                        EC.presence_of_element_located((By.XPATH, 
+                            f"//*[@id='{expansion_id}']//div[@class='Opta-Matchdata']//dt[text()='Attendance']"
+                        ))
+                    )
+                    
+                    att_el = panel.find_element(
+                        By.XPATH, ".//div[@class='Opta-Matchdata']//dt[text()='Attendance']/following-sibling::dd[1]"
+                    )
+                    record["attendance"] = att_el.get_attribute('innerHTML').strip() or None
+
+                except (NoSuchElementException, TimeoutException):
                     record["attendance"] = None
 
                 driver.execute_script("arguments[0].click();", button)
