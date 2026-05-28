@@ -72,6 +72,20 @@ def scrape_full_page():
         driver.get(URL)
         time.sleep(5)  # let Opta widget fully load
 
+
+
+        
+
+                # Add this right after time.sleep(5) in your scrape_full_page function
+        with open("page_dump.html", "w", encoding="utf-8") as f:
+            f.write(driver.page_source)
+        print("Page dumped to page_dump.html")
+
+
+
+
+
+
         # Find all match rows — each match is a tbody with class Opta-fixture
         match_rows = driver.find_elements(
             By.CSS_SELECTOR, "tbody.Opta-fixture"
