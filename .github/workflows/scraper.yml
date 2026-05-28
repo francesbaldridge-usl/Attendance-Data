@@ -39,6 +39,6 @@ jobs:
           password: ${{ secrets.GMAIL_PASS }}
           to: frances.baldridge@uslsoccer.com
           from: ${{ secrets.GMAIL_USER }}
-          subject: Weekly Attendance Report - ${{ github.run_number }}
-          body: League One and Championship attendance data attached.
+          subject: Weekly Attendance Report
+          body: 
           attachments: L1_attendance_data.xlsx,CH_attendance_data.xlsx
