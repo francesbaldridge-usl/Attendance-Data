@@ -33,12 +33,12 @@ jobs:
       - name: Send email with attachments
         uses: dawidd6/action-send-mail@v3
         with:
-          server_address: smtp.office365.com
-          server_port: 587
-          username: ${{ secrets.EMAIL_USER }}
-          password: ${{ secrets.EMAIL_PASS }}
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.GMAIL_USER }}
+          password: ${{ secrets.GMAIL_PASS }}
           to: frances.baldridge@uslsoccer.com
-          from: ${{ secrets.EMAIL_USER }}
+          from: ${{ secrets.GMAIL_USER }}
           subject: Weekly Attendance Report - ${{ github.run_number }}
           body: League One and Championship attendance data attached.
           attachments: L1_attendance_data.xlsx,CH_attendance_data.xlsx
