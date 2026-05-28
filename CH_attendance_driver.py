@@ -1,11 +1,3 @@
-from selenium.webdriver.edge.options import Options
-
-options = Options()
-options.add_argument("--headless")
-options.add_argument("--no-sandbox")
-options.add_argument("--disable-dev-shm-usage")
-driver = webdriver.Edge(options=options)  # pass options here
-
 import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -14,6 +6,12 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.webdriver.edge.options import Options
 import time
+
+options = Options()
+options.add_argument("--headless")
+options.add_argument("--no-sandbox")
+options.add_argument("--disable-dev-shm-usage")
+driver = webdriver.Edge(options=options)  # pass options here
 
 URL = "https://www.uslchampionship.com/league-schedule"
 WAIT_SECONDS = 15
