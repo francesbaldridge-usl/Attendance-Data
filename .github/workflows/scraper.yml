@@ -1,41 +1,40 @@
-name: USL Attendance Scraper
+name: Weekly Attendance Scrape
 
 on:
   schedule:
-    - cron: '0 10 * * 1'  # Every Monday 8am EST (13:00 UTC)
-  workflow_dispatch:        # Lets you trigger manually from GitHub
+    - cron: '0 10 * * 1'  # 6am EST = 11am UTC, every Monday
+  workflow_dispatch:       # lets you trigger it manually too
 
 jobs:
   scrape:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.13'
 
       - name: Install dependencies
-        run: |
-          pip install selenium webdriver-manager beautifulsoup4 pandas openpyxl
+        run: pip install selenium pandas openpyxl
 
-      - name: Install Chrome
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
+      - name: Run League One scraper
+        run: python L1_attendance_driver.py
 
-      - name: Run scraper
-        env:
-          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
-        run: python scraper.py
+      - name: Run Championship scraper
+        run: python CH_attendance_driver.py
 
-      - name: Commit updated Excel to repo
-        run: |
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Action"
-          git add attendance.xlsx
-          git commit -m "Weekly attendance update $(date '+%Y-%m-%d')" || echo "No changes to commit"
-          git push
+      - name: Send email with attachments
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.office365.com
+          server_port: 587
+          username: ${{ secrets.EMAIL_USER }}
+          password: ${{ secrets.EMAIL_PASS }}
+          to: frances.baldridge@uslsoccer.com
+          from: ${{ secrets.EMAIL_USER }}
+          subject: Weekly Attendance Report - ${{ github.run_number }}
+          body: League One and Championship attendance data attached.
+          attachments: L1_attendance_data.xlsx,CH_attendance_data.xlsx
