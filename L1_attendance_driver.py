@@ -122,4 +122,3 @@ if __name__ == "__main__":
     df = scrape_schedule(URL)
     print(f"\n{df.head(10)}")
     df.to_excel("L1_attendance_data.xlsx", index=False)
-    print(f"Saved {len(df)} rows → L1_attendance_data.xlsx")
