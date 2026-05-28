@@ -1,9 +1,14 @@
 name: Weekly Attendance Scrape
 
+# on:
+#   schedule:
+#     - cron: '0 10 * * 1'  # 6am EST = 11am UTC, every Monday
+#   workflow_dispatch:       # lets you trigger it manually too
+
 on:
   schedule:
-    - cron: '0 10 * * 1'  # 6am EST = 11am UTC, every Monday
-  workflow_dispatch:       # lets you trigger it manually too
+    - cron: '5 19 * * 4'  # 2:05pm EST = 7:05pm UTC, every Thursday
+  workflow_dispatch: 
 
 jobs:
   scrape:
