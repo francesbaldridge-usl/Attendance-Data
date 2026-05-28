@@ -3,7 +3,7 @@ name: Weekly Attendance Scrape
 on:
   schedule:
     # - cron: '0 9 * * 1'
-    - cron: '0 10 * * 5'
+    - cron: '0 21 * * 4'
   workflow_dispatch:       
 
 env:
@@ -37,7 +37,7 @@ jobs:
           server_port: 465
           username: ${{ secrets.GMAIL_USER }}
           password: ${{ secrets.GMAIL_PASS }}
-          to: frances.baldridge@uslsoccer.com
+          to: frances.baldridge@uslsoccer.com, ryan.halter@uslsoccer.com
           from: ${{ secrets.GMAIL_USER }}
           subject: Weekly Attendance Report
           body: 
