@@ -226,7 +226,6 @@
 #     df.to_excel("CH_attendance_data.xlsx", index=False)
 
 
-from numpy import record
 import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.common.by import By
