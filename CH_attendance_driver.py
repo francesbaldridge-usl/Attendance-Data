@@ -118,11 +118,7 @@ def get_html(element, css):
     # return pd.DataFrame(records)
 
 def scrape_schedule(url: str) -> pd.DataFrame:
-    options = Options()
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    driver = webdriver.Edge(options=options)
+    driver = webdriver.Edge()
     wait = WebDriverWait(driver, WAIT_SECONDS)
     records = []
 
@@ -140,11 +136,10 @@ def scrape_schedule(url: str) -> pd.DataFrame:
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "tbody.Opta-fixture")))
         time.sleep(3)
 
-        # Grab ALL tbody elements — both date headers and fixtures are tbody in this widget
         all_rows = driver.find_elements(By.CSS_SELECTOR, "table tbody")
         print(f"Total tbody rows found: {len(all_rows)}")
 
-        current_date = None  # tracks the most recently seen date header
+        current_date = None
 
         i = 0
         while True:
@@ -160,12 +155,11 @@ def scrape_schedule(url: str) -> pd.DataFrame:
                 time.sleep(0.5)
                 classes = tbody.get_attribute("class") or ""
             except Exception:
-                i -= 1  # retry this same index
+                i -= 1
                 time.sleep(1)
                 continue
 
             # ── Date header row ───────────────────────────────────────────────
-            # Header tbodys have no Opta-fixture class — they just contain a td > h4 > span
             if "Opta-fixture" not in classes:
                 try:
                     span = tbody.find_element(By.CSS_SELECTOR, "tr > td > h4 > span")
@@ -175,7 +169,7 @@ def scrape_schedule(url: str) -> pd.DataFrame:
                         print(f"\n  Date: {current_date}")
                 except NoSuchElementException:
                     pass
-                continue  # not a match row, move on
+                continue
 
             # ── Stop at first unplayed match ──────────────────────────────────
             if "Opta-prematch" in classes:
@@ -205,7 +199,6 @@ def scrape_schedule(url: str) -> pd.DataFrame:
                 try:
                     panel = driver.find_element(By.ID, expansion_id)
 
-                    # Wait until the attendance dt is actually present inside this panel
                     wait.until(
                         EC.presence_of_element_located((By.XPATH,
                             f"//*[@id='{expansion_id}']//div[@class='Opta-Matchdata']//dt[text()='Attendance']"
