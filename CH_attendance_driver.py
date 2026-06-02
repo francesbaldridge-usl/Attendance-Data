@@ -142,8 +142,16 @@ def scrape_schedule(url: str) -> pd.DataFrame:
         current_date = None
 
         for i, tbody in enumerate(all_rows):
-            driver.execute_script("arguments[0].scrollIntoView({block:'center'});", tbody)
+            try:
+                driver.execute_script("arguments[0].scrollIntoView({block:'center'});", tbody)
+            except Exception:
+                pass
             time.sleep(0.5)
+
+            try:
+                classes = tbody.get_attribute("class") or ""
+            except Exception:
+                continue
 
             classes = tbody.get_attribute("class") or ""
 
