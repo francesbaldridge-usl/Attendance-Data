@@ -2,8 +2,7 @@ name: Weekly Attendance Scrape
 
 on:
   schedule:
-    # - cron: '0 10 * * 1'
-    - cron: '0 10 * * 2'
+    - cron: '0 10 * * 1'
   workflow_dispatch:       
 
 env:
