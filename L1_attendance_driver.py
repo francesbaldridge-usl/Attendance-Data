@@ -40,9 +40,20 @@ def scrape_schedule(url: str) -> pd.DataFrame:
 
         current_date = None  # tracks the most recently seen date header
 
-        for i, tbody in enumerate(all_rows):
-            driver.execute_script("arguments[0].scrollIntoView({block:'center'});", tbody)
-            time.sleep(0.5)
+        i = 0
+        while True:
+            all_rows = driver.find_elements(By.CSS_SELECTOR, "table tbody")
+            if i >= len(all_rows):
+                break
+
+            tbody = all_rows[i]
+            i += 1
+
+            try:
+                driver.execute_script("arguments[0].scrollIntoView({block:'center'});", tbody)
+                time.sleep(0.5)
+            except Exception:
+                continue
 
             classes = tbody.get_attribute("class") or ""
 
