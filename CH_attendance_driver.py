@@ -153,8 +153,6 @@ def scrape_schedule(url: str) -> pd.DataFrame:
             except Exception:
                 continue
 
-            classes = tbody.get_attribute("class") or ""
-
             if "Opta-fixture" not in classes:
                 try:
                     span = tbody.find_element(By.CSS_SELECTOR, "tr > td > h4 > span")
