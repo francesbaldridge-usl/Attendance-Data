@@ -239,6 +239,7 @@
 
 
 
+from matplotlib.pylab import record
 import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -410,8 +411,10 @@ def scrape_schedule(url: str) -> pd.DataFrame:
 
             try:
                 score_row = tbody.find_element(By.CSS_SELECTOR, "tr.Opta-Scoreline")
-                record["home_team"] = get_html(score_row, "td.Opta-Home.Opta-TeamName")
-                record["away_team"] = get_html(score_row, "td.Opta-Away.Opta-TeamName")
+                # record["home_team"] = get_html(score_row, "td.Opta-Home.Opta-TeamName")
+                # record["away_team"] = get_html(score_row, "td.Opta-Away.Opta-TeamName")
+                record["home_team"] = get_html(score_row, "td.Opta-Team.Opta-TeamName.Opta-Home")
+                record["away_team"] = get_html(score_row, "td.Opta-Team.Opta-TeamName.Opta-Away")
 
                 button = score_row.find_element(By.CSS_SELECTOR, "button.Opta-Nest-Control")
                 expansion_id = button.get_attribute("data-expansion_id")
