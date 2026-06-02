@@ -153,23 +153,19 @@ def scrape_schedule(url: str) -> pd.DataFrame:
 
         current_date = None
 
-        i = 0
-        while True:
-            all_rows = driver.find_elements(By.CSS_SELECTOR, "table tbody")
-            if i >= len(all_rows):
-                break
-
-            tbody = all_rows[i]
-            i += 1
-
+        for i, tbody in enumerate(all_rows):
             try:
                 driver.execute_script("arguments[0].scrollIntoView({block:'center'});", tbody)
-                time.sleep(1)
+                time.sleep(0.5)
                 classes = tbody.get_attribute("class") or ""
             except Exception:
-                i -= 1
-                time.sleep(3)
-                continue
+                time.sleep(1)
+                try:
+                    driver.execute_script("arguments[0].scrollIntoView({block:'center'});", tbody)
+                    time.sleep(0.5)
+                    classes = tbody.get_attribute("class") or ""
+                except Exception:
+                    continue
 
             # ── Date header row ───────────────────────────────────────────────
             if "Opta-fixture" not in classes:
