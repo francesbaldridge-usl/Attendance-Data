@@ -164,11 +164,11 @@ def scrape_schedule(url: str) -> pd.DataFrame:
 
             try:
                 driver.execute_script("arguments[0].scrollIntoView({block:'center'});", tbody)
-                time.sleep(0.5)
+                time.sleep(1)
                 classes = tbody.get_attribute("class") or ""
             except Exception:
                 i -= 1
-                time.sleep(1)
+                time.sleep(3)
                 continue
 
             # ── Date header row ───────────────────────────────────────────────
