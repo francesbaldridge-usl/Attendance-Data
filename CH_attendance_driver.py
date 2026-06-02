@@ -142,20 +142,11 @@ def scrape_schedule(url: str) -> pd.DataFrame:
         current_date = None
 
         for i, tbody in enumerate(all_rows):
-            try:
-                driver.execute_script("arguments[0].scrollIntoView({block:'center'});", tbody)
-                time.sleep(0.5)
-                classes = tbody.get_attribute("class") or ""
-            except Exception:
-                time.sleep(1)
-                try:
-                    driver.execute_script("arguments[0].scrollIntoView({block:'center'});", tbody)
-                    time.sleep(0.5)
-                    classes = tbody.get_attribute("class") or ""
-                except Exception:
-                    continue
+            driver.execute_script("arguments[0].scrollIntoView({block:'center'});", tbody)
+            time.sleep(0.5)
 
-            # ── Date header row ───────────────────────────────────────────────
+            classes = tbody.get_attribute("class") or ""
+
             if "Opta-fixture" not in classes:
                 try:
                     span = tbody.find_element(By.CSS_SELECTOR, "tr > td > h4 > span")
@@ -167,7 +158,6 @@ def scrape_schedule(url: str) -> pd.DataFrame:
                     pass
                 continue
 
-            # ── Stop at first unplayed match ──────────────────────────────────
             if "Opta-prematch" in classes:
                 print(f"  [{i}] First unplayed match — stopping.")
                 break
