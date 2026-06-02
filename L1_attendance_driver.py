@@ -38,9 +38,9 @@ def scrape_schedule(url: str) -> pd.DataFrame:
         all_rows = driver.find_elements(By.CSS_SELECTOR, "table tbody")
         print(f"Total tbody rows found: {len(all_rows)}")
 
-        current_date = None  # tracks the most recently seen date header
-
+        current_date = None
         i = 0
+
         while True:
             all_rows = driver.find_elements(By.CSS_SELECTOR, "table tbody")
             if i >= len(all_rows):
@@ -52,7 +52,10 @@ def scrape_schedule(url: str) -> pd.DataFrame:
             try:
                 driver.execute_script("arguments[0].scrollIntoView({block:'center'});", tbody)
                 time.sleep(0.5)
+                classes = tbody.get_attribute("class") or ""
             except Exception:
+                i -= 1  # retry this same index
+                time.sleep(1)
                 continue
 
             classes = tbody.get_attribute("class") or ""
