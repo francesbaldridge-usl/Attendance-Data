@@ -1,7 +1,6 @@
 *
 
 !gitignore
-!attendance_scraper.py
 !L1_attendance_driver.py
 !CH_attendance_driver.py
 !scraper.yml
