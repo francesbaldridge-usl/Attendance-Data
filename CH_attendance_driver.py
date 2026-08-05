@@ -286,12 +286,12 @@
 #     wb.save(output_file)
 
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver.edge.options import Options
 from openpyxl import load_workbook
 import time
@@ -305,6 +305,10 @@ options.add_argument("--disable-dev-shm-usage")
 
 URL = "https://www.uslchampionship.com/league-schedule"
 WAIT_SECONDS = 15
+
+# How far past "today" we're willing to keep scanning before assuming everything
+# remaining is genuinely future schedule (not just an out-of-order reschedule).
+FUTURE_CUTOFF_DAYS = 3
 
 
 def get_team_name(row, side):
@@ -350,20 +354,26 @@ def scrape_schedule(url: str) -> pd.DataFrame:
         total = load_all_rows(driver)
         print(f"Total tbody rows found: {total}")
 
+        all_rows = driver.find_elements(By.CSS_SELECTOR, "table tbody")
         current_date = None
+        cutoff = datetime.now() + timedelta(days=FUTURE_CUTOFF_DAYS)
 
         for i in range(total):
-            all_rows = driver.find_elements(By.CSS_SELECTOR, "table tbody")
             if i >= len(all_rows):
                 break
             tbody = all_rows[i]
 
+            # Read the class attribute without scrolling/sleeping — cheap, and
+            # covers the vast majority of rows (date headers + future fixtures)
+            # that we're only skipping past.
             try:
-                driver.execute_script("arguments[0].scrollIntoView({block:'center'});", tbody)
-                time.sleep(0.5)
                 classes = tbody.get_attribute("class") or ""
-            except Exception:
-                continue
+            except StaleElementReferenceException:
+                all_rows = driver.find_elements(By.CSS_SELECTOR, "table tbody")
+                if i >= len(all_rows):
+                    break
+                tbody = all_rows[i]
+                classes = tbody.get_attribute("class") or ""
 
             if "Opta-fixture" not in classes:
                 try:
@@ -378,16 +388,21 @@ def scrape_schedule(url: str) -> pd.DataFrame:
                             except ValueError:
                                 current_date = date_text  # fallback to raw string
                         print(f"\n  Date: {current_date}")
+
+                        # Bounded stop: once we're clearly past today's date by
+                        # a comfortable margin, the rest of the table is genuine
+                        # future schedule — no need to keep scanning hundreds
+                        # more rows. This replaces the old "first prematch"
+                        # break, which broke on out-of-order reschedules.
+                        if isinstance(current_date, datetime) and current_date > cutoff:
+                            print(f"  Past cutoff ({cutoff.date()}) — stopping scan.")
+                            break
                 except NoSuchElementException:
                     pass
                 continue
 
             if "Opta-prematch" in classes:
-                # NOTE: no longer breaking here. Postponed/rescheduled fixtures can
-                # show as Opta-prematch out of chronological order, sitting before
-                # later dated matches that already have results. Skip and keep going
-                # instead of stopping the whole scrape.
-                print(f"  [{i}] Unplayed/rescheduled match — skipping.")
+                # Skip cheaply — no scroll, no sleep, no interaction needed.
                 continue
 
             if "Opta-result" not in classes:
@@ -396,6 +411,9 @@ def scrape_schedule(url: str) -> pd.DataFrame:
             record = {"date": current_date, "home_team": None, "away_team": None, "attendance": None}
 
             try:
+                # Only scroll/interact for rows we actually need to click.
+                driver.execute_script("arguments[0].scrollIntoView({block:'center'});", tbody)
+
                 score_row = tbody.find_element(By.CSS_SELECTOR, "tr.Opta-Scoreline")
                 record["home_team"] = get_team_name(score_row, "Home")
                 record["away_team"] = get_team_name(score_row, "Away")
@@ -417,9 +435,11 @@ def scrape_schedule(url: str) -> pd.DataFrame:
                 except (NoSuchElementException, TimeoutException):
                     record["attendance"] = None
 
+                # Re-fetch only now, since the click may have altered the DOM
+                # around this row (accordion expand/collapse).
+                all_rows = driver.find_elements(By.CSS_SELECTOR, "table tbody")
                 try:
-                    all_rows2 = driver.find_elements(By.CSS_SELECTOR, "table tbody")
-                    tbody2 = all_rows2[i]
+                    tbody2 = all_rows[i]
                     score_row2 = tbody2.find_element(By.CSS_SELECTOR, "tr.Opta-Scoreline")
                     button2 = score_row2.find_element(By.CSS_SELECTOR, "button.Opta-Nest-Control")
                     driver.execute_script("arguments[0].click();", button2)
