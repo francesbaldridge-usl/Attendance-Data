@@ -1,10 +1,12 @@
 # import pandas as pd
+# from datetime import datetime
 # from selenium import webdriver
 # from selenium.webdriver.common.by import By
 # from selenium.webdriver.support.ui import WebDriverWait
 # from selenium.webdriver.support import expected_conditions as EC
 # from selenium.common.exceptions import TimeoutException, NoSuchElementException
 # from selenium.webdriver.edge.options import Options
+# from openpyxl import load_workbook
 # import time
 
 # options = Options()
@@ -67,7 +69,13 @@
 #                     span = tbody.find_element(By.CSS_SELECTOR, "tr > td > h4 > span")
 #                     date_text = span.get_attribute('innerHTML').strip()
 #                     if date_text:
-#                         current_date = date_text
+#                         try:
+#                             current_date = datetime.strptime(date_text, "%A, %B %d, %Y")
+#                         except ValueError:
+#                             try:
+#                                 current_date = datetime.strptime(f"{date_text}, {datetime.now().year}", "%A, %B %d, %Y")
+#                             except ValueError:
+#                                 current_date = date_text  # fallback to raw string
 #                         print(f"\n  Date: {current_date}")
 #                 except NoSuchElementException:
 #                     pass
@@ -130,7 +138,18 @@
 # if __name__ == "__main__":
 #     df = scrape_schedule(URL)
 #     print(f"\n{df.head(10)}")
-#     df.to_excel("L1_attendance_data.xlsx", index=False)
+
+#     output_file = "L1_attendance_data.xlsx"
+#     df.to_excel(output_file, index=False)
+
+#     # Apply m/d date format to the date column so Excel displays 6/13 and sorts correctly
+#     wb = load_workbook(output_file)
+#     ws = wb.active
+#     for cell in ws["A"][1:]:  # skip header row
+#         if isinstance(cell.value, datetime):
+#             cell.number_format = "m/d"
+#     wb.save(output_file)
+
 
 import pandas as pd
 from datetime import datetime
@@ -152,6 +171,11 @@ options.add_argument("--disable-dev-shm-usage")
 
 URL = "https://www.uslleagueone.com/league-schedule"
 WAIT_SECONDS = 15
+
+# How many *consecutive* unplayed rows we're willing to tolerate before
+# assuming we've genuinely reached the future schedule (vs. hitting a single
+# postponed/rescheduled game that's sitting out of chronological order).
+PREMATCH_TOLERANCE = 3
 
 
 def get_team_name(row, side):
@@ -184,6 +208,7 @@ def scrape_schedule(url: str) -> pd.DataFrame:
         print(f"Total tbody rows found: {total}")
 
         current_date = None
+        consecutive_prematch = 0
 
         for i in range(total):
             all_rows = driver.find_elements(By.CSS_SELECTOR, "table tbody")
@@ -216,11 +241,27 @@ def scrape_schedule(url: str) -> pd.DataFrame:
                 continue
 
             if "Opta-prematch" in classes:
-                print(f"  [{i}] First unplayed match — stopping.")
-                break
+                # A single postponed/rescheduled game can show up as
+                # Opta-prematch out of chronological order (e.g. postponed to
+                # a TBD future date but still sitting in its original slot).
+                # Skip it rather than assuming we've hit the end of the
+                # played season. Only stop once we see several unplayed rows
+                # in a row, which means we've genuinely reached future
+                # schedule.
+                consecutive_prematch += 1
+                print(f"  [{i}] Unplayed/rescheduled match — skipping ({consecutive_prematch}/{PREMATCH_TOLERANCE}).")
+                if consecutive_prematch >= PREMATCH_TOLERANCE:
+                    print(f"  [{i}] {PREMATCH_TOLERANCE} consecutive unplayed matches — stopping.")
+                    break
+                continue
 
             if "Opta-result" not in classes:
                 continue
+
+            # Reset the counter — we've hit a real result, so any prior
+            # unplayed row(s) were out-of-order postponements, not the start
+            # of the future schedule.
+            consecutive_prematch = 0
 
             record = {"date": current_date, "home_team": None, "away_team": None, "attendance": None}
 
@@ -283,3 +324,4 @@ if __name__ == "__main__":
         if isinstance(cell.value, datetime):
             cell.number_format = "m/d"
     wb.save(output_file)
+
