@@ -169,7 +169,7 @@ options.add_argument("--blink-settings=imagesEnabled=true")
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
 
-URL = "https://www.uslleagueone.com/league-schedule"
+URL = "https://www.gainbridgesuperleague.com/league-schedule/"
 WAIT_SECONDS = 15
 
 # How many *consecutive* unplayed rows we're willing to tolerate before
@@ -314,7 +314,7 @@ if __name__ == "__main__":
     df = scrape_schedule(URL)
     print(f"\n{df.head(10)}")
 
-    output_file = "L1_attendance_data.xlsx"
+    output_file = "SL_attendance_data.xlsx"
     df.to_excel(output_file, index=False)
 
     # Apply m/d date format to the date column so Excel displays 6/13 and sorts correctly

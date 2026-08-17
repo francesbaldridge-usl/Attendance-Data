@@ -27,6 +27,9 @@ jobs:
       - name: Run Championship scraper
         run: python CH_attendance_driver.py
 
+      - name: Run Super League scraper
+        run: python SL_attendance_driver.py
+
       - name: Send email with attachments
         uses: dawidd6/action-send-mail@v3
         with:
@@ -34,8 +37,9 @@ jobs:
           server_port: 465
           username: ${{ secrets.GMAIL_USER }}
           password: ${{ secrets.GMAIL_PASS }}
-          to: frances.baldridge@uslsoccer.com, ryan.halter@uslsoccer.com, kendra.hodgdon@uslsoccer.com
+          to: frances.baldridge@uslsoccer.com
+          # to: frances.baldridge@uslsoccer.com, ryan.halter@uslsoccer.com, kendra.hodgdon@uslsoccer.com
           from: ${{ secrets.GMAIL_USER }}
           subject: Weekly Attendance Report
           body: 
-          attachments: L1_attendance_data.xlsx,CH_attendance_data.xlsx
+          attachments: L1_attendance_data.xlsx,CH_attendance_data.xlsx,SL_attendance_data.xlsx
