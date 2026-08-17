@@ -3,4 +3,5 @@
 !gitignore
 !L1_attendance_driver.py
 !CH_attendance_driver.py
+!SL_attendance_driver.py
 !scraper.yml
