@@ -70,22 +70,62 @@ def scrape_schedule(url: str) -> pd.DataFrame:
             except Exception:
                 continue
 
+            # if "Opta-fixture" not in classes:
+            #     try:
+            #         span = tbody.find_element(By.CSS_SELECTOR, "tr > td > h4 > span")
+            #         date_text = span.get_attribute('innerHTML').strip()
+            #         if date_text:
+            #             try:
+            #                 current_date = datetime.strptime(date_text, "%A, %B %d, %Y")
+            #             except ValueError:
+            #                 try:
+            #                     current_date = datetime.strptime(f"{date_text}, {datetime.now().year}", "%A, %B %d, %Y")
+            #                 except ValueError:
+            #                     current_date = date_text  # fallback to raw string
+            #             print(f"\n  Date: {current_date}")
+            #     except NoSuchElementException:
+            #         pass
+            #     continue
+
+
             if "Opta-fixture" not in classes:
                 try:
                     span = tbody.find_element(By.CSS_SELECTOR, "tr > td > h4 > span")
                     date_text = span.get_attribute('innerHTML').strip()
+
                     if date_text:
                         try:
                             current_date = datetime.strptime(date_text, "%A, %B %d, %Y")
                         except ValueError:
                             try:
-                                current_date = datetime.strptime(f"{date_text}, {datetime.now().year}", "%A, %B %d, %Y")
+                                current_date = datetime.strptime(
+                                    f"{date_text}, {datetime.now().year}",
+                                    "%A, %B %d, %Y"
+                                )
                             except ValueError:
-                                current_date = date_text  # fallback to raw string
+                                current_date = date_text
+
+                        # STOP if dates move backwards
+                        if (
+                            isinstance(current_date, datetime)
+                            and isinstance(last_date, datetime)
+                            and current_date < last_date
+                        ):
+                            print(
+                                f"DATE REVERSAL DETECTED: "
+                                f"{last_date} -> {current_date}"
+                            )
+                            break
+
+                        last_date = current_date
+
                         print(f"\n  Date: {current_date}")
+
                 except NoSuchElementException:
                     pass
+
                 continue
+
 
             if "Opta-prematch" in classes:
                 # A single postponed/rescheduled game can show up as
