@@ -56,6 +56,7 @@ def scrape_schedule(url: str) -> pd.DataFrame:
         print(f"Total tbody rows found: {total}")
 
         current_date = None
+        last_date = None
         consecutive_prematch = 0
 
         for i in range(total):
